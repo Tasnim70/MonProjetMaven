@@ -12,7 +12,7 @@ pipeline {
 
                git branch: 'master',
 
-               url: ' https://github.com/hwafa/timesheetproject.git'
+               url: ' https://github.com/Tasnim70/MonProjetMaven.git'
 
           }
 
