@@ -1,33 +1,68 @@
 pipeline {
+    agent any
 
- agent any
+    tools {
+        maven 'M2_HOME'
+        jdk 'JAVA_HOME'
+    }
 
- tools {jdk 'JAVA_HOME’, maven 'M2_HOME'}
+    environment {
+        SONAR_TOKEN = credentials('jenkins-sonar')
+        GIT_CREDS   = credentials('github-creds')
+    }
 
- stages {
+    stages {
+        stage('Checkout Git') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Tasnim70/MonProjetMaven.git',
+                    credentialsId: 'github-creds'
+            }
+        }
 
- stage('GIT') {
+        stage('Clean') {
+            steps {
+                sh 'mvn clean'
+            }
+        }
 
-           steps {
+        stage('Compile') {
+            steps {
+                sh 'mvn compile'
+            }
+        }
 
-               git branch: 'main',
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sq1') {
+                    sh 'mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}'
+                }
+            }
+        }
 
-               url: ' https://github.com/Tasnim70/MonProjetMaven.git'
+        stage('Package (JAR)') {
+            steps {
+                sh 'mvn package -DskipTests'
+            }
+        }
 
-          }
 
-     }
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: '*/target/.jar', fingerprint: true
+            }
+        }
+    }
 
- stage ('Compile Stage') {
-
- steps {
-
- sh 'mvn clean compile'
-
- }
-
- }
-
- }
-
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline CI réussi !'
+        }
+        failure {
+            echo 'Échec du pipeline '
+        }
+    }
 }
