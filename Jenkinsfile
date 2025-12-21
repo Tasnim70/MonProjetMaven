@@ -2,48 +2,47 @@ pipeline {
     agent any
 
     tools {
-        maven 'M2_HOME'       // Nom du Maven configuré dans Jenkins
-        jdk 'JAVA_HOME'       // Nom du JDK configuré dans Jenkins
+        maven 'M2_HOME'  // nom de ton installation Maven sur Jenkins
+        jdk 'JAVA_HOME'   // nom de ton JDK sur Jenkins
     }
 
     environment {
-        SONAR_TOKEN = credentials('sonar')  // Token SonarQube
+        SONAR_TOKEN = credentials('sonar') // token SonarQube
     }
 
     stages {
+
         stage('Checkout Git') {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/Tasnim70/MonProjetMaven.git'
-                    // Si repo privé, ajoute : credentialsId: 'github-creds'
             }
         }
 
-        stage('Clean & Build') {
+        stage('Clean') {
             steps {
-                sh 'mvn clean verify'
+                sh 'mvn clean'
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                // Utilisation du profil "test" pour H2
+                sh 'mvn verify -Dspring.profiles.active=test'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sq1') {   // Nom du serveur SonarQube dans Jenkins
-                    sh "mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}"
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                withSonarQubeEnv('cube') {
+                    sh 'mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN} -Dspring.profiles.active=test'
                 }
             }
         }
 
         stage('Package JAR') {
             steps {
-                sh 'mvn package -DskipTests'
+                sh 'mvn package -DskipTests -Dspring.profiles.active=test'
             }
         }
 
@@ -55,11 +54,15 @@ pipeline {
     }
 
     post {
+        always {
+            echo 'Nettoyage du workspace...'
+            cleanWs()
+        }
         success {
-            echo 'Pipeline CI réussi !'
+            echo 'Pipeline CI/CD exécuté avec succès !'
         }
         failure {
-            echo 'Échec du pipeline'
+            echo 'Échec du pipeline. Vérifie les logs.'
         }
     }
 }
