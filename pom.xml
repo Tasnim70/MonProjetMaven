@@ -101,6 +101,12 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+                 <plugin>
+    <groupId>org.sonarsource.scanner.maven</groupId>
+    <artifactId>sonar-maven-plugin</artifactId>
+    <version>4.9.3.5987</version> <!-- version stable -->
+</plugin>
+
 
             <!-- Spring Boot Maven Plugin -->
             <plugin>
