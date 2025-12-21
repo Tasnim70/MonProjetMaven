@@ -57,9 +57,7 @@ pipeline {
 
     post {
         always {
-            node {
-                cleanWs()
-            }
+            cleanWs()  // ✅ fonctionne directement
         }
         success {
             echo 'Pipeline CI réussi !'
