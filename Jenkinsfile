@@ -10,7 +10,7 @@ pipeline {
         stage('Build & SonarQube Scanner') {
             agent any
             steps {
-                withSonarQubeEnv('q1') { // Nom de ton serveur SonarQube
+                withSonarQubeEnv('sq1') { // Nom de ton serveur SonarQube
                     sh 'mvn clean package sonar:sonar -Dspring.profiles.active=test'
                 }
             }
