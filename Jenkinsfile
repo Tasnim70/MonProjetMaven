@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        SONAR_TOKEN = credentials('sonar')
+        SONAR_TOKEN = credentials('jenkins-sonar')
     }
 
     stages {
