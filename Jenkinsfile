@@ -1,68 +1,55 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'M2_HOME'
-        jdk 'JAVA_HOME'
-    }
-
     environment {
-        SONAR_TOKEN = credentials('sonar')
-        GIT_CREDS   = credentials('github-creds')
+        SPRING_PROFILE = "test"
     }
 
     stages {
-        stage('Checkout Git') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
+                git(
                     url: 'https://github.com/Tasnim70/MonProjetMaven.git',
+                    branch: 'main',
                     credentialsId: 'github-creds'
+                )
             }
         }
 
-        stage('Clean') {
+        stage('Build') {
             steps {
-                sh 'mvn clean'
-            }
-        }
-
-        stage('Compile') {
-            steps {
-                sh 'mvn compile'
+                sh "mvn clean package -Dspring.profiles.active=${SPRING_PROFILE}"
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sq1') {
-                    sh 'mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}'
+                    sh "mvn sonar:sonar -Dspring.profiles.active=${SPRING_PROFILE}"
                 }
             }
         }
 
-        stage('Package (JAR)') {
+        stage('Quality Gate') {
             steps {
-                sh 'mvn package -DskipTests'
-            }
-        }
-
-
-        stage('Archive Artifact') {
-            steps {
-                archiveArtifacts artifacts: '*/target/.jar', fingerprint: true
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
     }
 
     post {
-        always {
-            cleanWs()
-        }
         success {
-            echo 'Pipeline CI réussi !'
+            echo 'Pipeline terminé avec succès !'
         }
         failure {
-            echo 'Échec du pipeline '
+            echo 'Échec du pipeline !'
+        }
+        always {
+            node { // <-- obligatoire pour cleanWs()
+                cleanWs()
+            }
         }
     }
 }
