@@ -1,8 +1,8 @@
 pipeline {
     agent any
     tools {
-        maven 'M2_HOME'
-        jdk 'JAVA_HOME'
+        jdk 'Java21'  
+        maven 'Maven3'
     }
     environment {
         SONAR_TOKEN = credentials('4SAE-project-token')
