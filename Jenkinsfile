@@ -8,13 +8,13 @@ pipeline {
 
     environment {
         SONAR_TOKEN = credentials('4SAE-project-token')
-        GIT_CREDS   = credentials('github-creds')
+       
     }
 
     stages {
         stage('Checkout Git') {
             steps {
-                git branch: 'master',
+                git branch: 'main',
                     url: 'https://github.com/Tasnim70/MonProjetMaven.git',
                     credentialsId: 'github-creds'
             }
