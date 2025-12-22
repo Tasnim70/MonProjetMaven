@@ -1,68 +1,27 @@
 pipeline {
     agent any
-
     tools {
-        maven 'M2_HOME'
-        jdk 'JAVA_HOME'
+        maven 'Maven3'
+        git 'Default'
     }
-
     environment {
         SONAR_TOKEN = credentials('4SAE-project-token')
-       
     }
-
     stages {
-        stage('Checkout Git') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Tasnim70/MonProjetMaven.git',
-                    credentialsId: 'github-creds'
+                git url: 'https://github.com/Tasnim70/MonProjetMaven.git', branch: 'main'
             }
         }
-
-        stage('Clean') {
+        stage('Build') {
             steps {
-                sh 'mvn clean'
+                sh 'mvn clean compile'
             }
         }
-
-        stage('Compile') {
-            steps {
-                sh 'mvn compile'
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sq1') {
-                    sh 'mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}'
-                }
+                sh "mvn sonar:sonar -Dsonar.projectKey=4SAE-project -Dsonar.host.url=http://192.168.33.10:9000 -Dsonar.login=$SONAR_TOKEN"
             }
-        }
-
-        stage('Package (JAR)') {
-            steps {
-                sh 'mvn package -DskipTests'
-            }
-        }
-
-
-        stage('Archive Artifact') {
-            steps {
-                archiveArtifacts artifacts: '*/target/.jar', fingerprint: true
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
-        }
-        success {
-            echo 'Pipeline CI réussi !'
-        }
-        failure {
-            echo 'Échec du pipeline '
         }
     }
 }
