@@ -8,14 +8,13 @@ pipeline {
 
     environment {
         SONAR_TOKEN = credentials('jenkins-sonar')
-       
     }
 
     stages {
         stage('Checkout Git') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/Tasnim70/sonar.git',
+                    url: 'https://github.com/Tasnim70/sonar.git'
             }
         }
 
@@ -34,7 +33,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sqsd') {
-                    sh 'mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}'
+                    sh "mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN"
                 }
             }
         }
@@ -50,7 +49,6 @@ pipeline {
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
             }
         }
-
     }
 
     post {
