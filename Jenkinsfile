@@ -9,14 +9,13 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('jenkins-sonar')
         GIT_CREDS   = credentials('github-creds')
-        DOCKER_IMAGE = "mydockeruser/tpdevopssaifden:latest"
     }
 
     stages {
         stage('Checkout Git') {
             steps {
-                git branch: 'master',
-                    url: 'https://github.com/denden654/sonar.git',
+                git branch: 'main',
+                    url: 'https://github.com/Tasnim70/MonProjetMaven.git',
                     credentialsId: 'github-creds'
             }
         }
