@@ -1,66 +1,57 @@
 pipeline {
     agent any
 
+    // Définition des outils configurés dans Jenkins
     tools {
-        maven 'M2_HOME'
-        jdk 'JAVA_HOME'
-    }
-
-    environment {
-        SONAR_TOKEN = credentials('jenkins-sonar')
+        maven 'M2_HOME'   // Nom de ton Maven dans Jenkins
+        jdk 'JAVA_HOME'    // Nom de ton JDK dans Jenkins
     }
 
     stages {
-
-        stage('Checkout Git') {
+        stage('Checkout SCM') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Tasnim70/MonProjetMaven.git'
+                git branch: 'main', url: 'https://github.com/Tasnim70/MonProjetMaven.git'
             }
         }
 
-        stage('Clean') {
+        stage('Build') {
             steps {
-                sh 'mvn clean'
+                sh 'mvn clean compile'
             }
         }
 
-        stage('Compile') {
+        stage('Run Tests') {
             steps {
-                sh 'mvn compile'
+                sh 'mvn test'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sqsd') {
-                    sh "mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}"
+                // Utilisation sécurisée du token SonarQube
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    withSonarQubeEnv('sqsd') {  // Nom de ton serveur SonarQube configuré dans Jenkins
+                        sh 'mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN'
+                    }
                 }
             }
         }
 
-        stage('Package (JAR)') {
+        stage('Quality Gate') {
             steps {
-                sh 'mvn package -DskipTests'
-            }
-        }
-
-        stage('Archive Artifact') {
-            steps {
-                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
     }
 
     post {
-        always {
-            cleanWs()  // directement, sans node {}
-        }
         success {
-            echo 'Pipeline CI réussi ! 🎉'
+            echo "Le pipeline s'est terminé avec succès ✅"
         }
         failure {
-            echo 'Échec du pipeline ❌'
+            echo "Le pipeline a échoué ❌"
         }
     }
 }
